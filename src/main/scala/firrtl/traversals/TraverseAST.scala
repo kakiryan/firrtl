@@ -8,7 +8,7 @@ BundleType}
 import firrtl.Mappers._
 import scala.collection.mutable
 
-class TraverseAdder extends Transform {
+class TraverseAST extends Transform {
 
   def inputForm = HighForm
 
@@ -16,8 +16,6 @@ class TraverseAdder extends Transform {
 
   def execute(state: CircuitState): CircuitState = {
     val circuit = state.circuit
-
-    println("Going to walk module")
     circuit.map(walkModule())
 
     // Return an unchanged [[firrtl.CircuitState CircuitState]]
@@ -25,7 +23,7 @@ class TraverseAdder extends Transform {
   }
 
   def walkModule()(m: DefModule): DefModule = {
-    println("Made it into module: " + m.name)
+    println("Module: " + m.name)
     m.map(walkStatement())
   }
 
@@ -46,7 +44,7 @@ class TraverseAdder extends Transform {
         val flow = loc.asInstanceOf[SubField].flow
         // println("Connection Flow: " + flow)
         if (ref.isInstanceOf[Reference]) {
-          println("Connection!")
+          print("Connection Statement: ")
           println(ref.asInstanceOf[Reference].name + " assigned to " + loc.asInstanceOf[SubField].name)
         } 
       } else {
@@ -59,18 +57,22 @@ class TraverseAdder extends Transform {
 
 
   def walkExpression()(e: Expression): Expression = {
+    // print("Walking expression")
     if (e.isInstanceOf[DoPrim]) {
       val doPrim = e.asInstanceOf[DoPrim]
       println("DoPrimitive Operation Expr: " +  doPrim.op + " with " + doPrim.args.length + " arguments.")
     } else if (e.isInstanceOf[Reference]) {
-      // if (!e.asInstanceOf[Reference].tpe.isInstanceOf[BundleType])
-      print("\t\t")
-      println(e.asInstanceOf[Reference].name)
-    }
+        if (!e.asInstanceOf[Reference].tpe.isInstanceOf[BundleType]) {
+          print("\t\t")
+          println(e.asInstanceOf[Reference].name)
+        } 
+      }
+      else if (e.isInstanceOf[SubField]) {
+        // prints subfields of a bundle type
+        print("\t\t")
+        println(e.asInstanceOf[SubField].name)
+      }
     
-    else {
-      // println("Statement: " + s)
-    }
     e.map(walkExpression())
   }
 }
