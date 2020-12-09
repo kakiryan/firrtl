@@ -2,8 +2,8 @@
 
 package traversals
 
-import firrtl.{CircuitState, HighForm, Transform, Utils}
-import firrtl.ir.{DefModule, Expression, Mux, Statement, DefNode, DoPrim, Connect, SubField, Reference,
+import firrtl.{CircuitState, HighForm, Transform, Utils, Flow}
+import firrtl.ir.{DefModule, Expression, DefRegister, Mux, Statement, DefNode, DoPrim, Connect, SubField, Reference,
 BundleType}
 import firrtl.Mappers._
 import scala.collection.mutable
@@ -47,10 +47,16 @@ class TraverseAST extends Transform {
           print("Connection Statement: ")
           println(ref.asInstanceOf[Reference].name + " assigned to " + loc.asInstanceOf[SubField].name)
         } 
+      } else if (loc.isInstanceOf[Reference] && ref.isInstanceOf[Reference]) {
+        val refLoc = loc.asInstanceOf[Reference]
+        println("Connection Statement: " + ref.asInstanceOf[Reference].name + " assigned to " + refLoc.name )
       } else {
         println("Connection location:" + connection.loc)
       }
-    } 
+    } else if (s.isInstanceOf[DefRegister]) {
+      val reg = s.asInstanceOf[DefRegister]
+      println("Register Defn Statement: " + reg.name + " initalized with " + reg.init)
+    }
  
     s.map(walkStatement())
   }
@@ -71,6 +77,9 @@ class TraverseAST extends Transform {
         // prints subfields of a bundle type
         print("\t\t")
         println(e.asInstanceOf[SubField].name)
+      } else if (e.isInstanceOf[Mux]) {
+        val mux = e.asInstanceOf[Mux]
+        println("Mux Expression")
       }
     
     e.map(walkExpression())
